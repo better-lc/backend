@@ -1,0 +1,26 @@
+{
+	"name": "typescript-base",
+	"version": "1.0.0",
+	"description": "Some shitty template for typescript node",
+	"main": "dist/index.js",
+	"scripts": {
+		"start": "env-cmd node .",
+		"prestart": "tsc --build",
+		"lint": "eslint --fix src/**/*.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/unlimitedcoder2/typescript-base.git"
+	},
+	"author": "unlimitedcoder2",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/unlimitedcoder2/typescript-base/issues"
+	},
+	"homepage": "https://github.com/unlimitedcoder2/typescript-base#readme",
+	"devDependencies": {
+		"@types/node": "^16.6.1",
+		"typescript": "^4.3.5",
+		"env-cmd": "^10.1.0"
+	}
+}
