@@ -8,9 +8,10 @@ import io.ktor.routing.*
 import io.netty.buffer.Unpooled
 import moe.hypixel.lc.server.objects.Player
 import moe.hypixel.lc.server.packets.PacketManager
-import moe.hypixel.lc.server.packets.`in`.DoEmoteInPacket
-import moe.hypixel.lc.server.packets.`in`.FriendMessageInPacket
+import moe.hypixel.lc.server.packets.`in`.*
 import moe.hypixel.lc.server.packets.out.*
+import moe.hypixel.lc.server.packets.utils.readString
+import moe.hypixel.lc.server.packets.utils.readVarInt
 import moe.hypixel.lc.server.packets.utils.sendPacket
 import java.util.*
 
@@ -26,7 +27,10 @@ fun Application.configureSockets() {
 		val packetManager = PacketManager()
 		packetManager.registerInPackets(
 			FriendMessageInPacket::class,
-			DoEmoteInPacket::class
+			DoEmoteInPacket::class,
+			CosmeticChangePacket::class,
+			PlayerDataRequestPacket::class,
+			ClientSettingsInPacket::class
 		)
 
 		webSocket("/") {
@@ -60,16 +64,37 @@ fun Application.configureSockets() {
 				when (frame) {
 					is Frame.Binary -> {
 						val buf = Unpooled.copiedBuffer(frame.data)
-						val packet = packetManager.getInPacket(buf) ?: continue
-
-						when(packet) {
+						when(val packet = packetManager.getInPacket(buf)) {
 							is FriendMessageInPacket -> {
-								if (packet.message.startsWith("uwu")) {
-									sendPacket(BanMessageOutPacket(2, "unlimitedcoder2", listOf("Hello", "World")))
+								if (packet.message.startsWith("!uwu")) {
+									sendPacket(BanMessagePacket(2, "unlimitedcoder2", listOf("Hello", "World")))
 								}
 							}
+							is CosmeticChangePacket -> {
+								for(change in packet.changes) {
+									println("Cosmetic ${change.id} ${if(change.state) "enabled" else "disabled"}")
+								}
+							}
+							is PlayerDataRequestPacket -> {
+								for(requestedPlayerId in packet.requestedPlayers) {
+									println("Client requested data for $requestedPlayerId")
+								}
+							}
+
+							null -> {
+								val pk = Unpooled.copiedBuffer(frame.data)
+								val packetId = pk.readVarInt()
+								if(packetId == 6) {
+									val str = pk.readString(52)
+									val otherStr = pk.readString(100)
+									println("6: $str - $otherStr")
+								} else {
+									println("Unknown packet with id $packetId received")
+								}
+							}
+
 							else -> {
-								println(packet.toString())
+								//println(packet.toString())
 							}
 						}
 					}

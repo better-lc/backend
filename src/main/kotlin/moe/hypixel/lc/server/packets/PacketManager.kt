@@ -5,6 +5,7 @@ import moe.hypixel.lc.server.packets.utils.getId
 import moe.hypixel.lc.server.packets.utils.readVarInt
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 
 class PacketManager {
@@ -18,7 +19,7 @@ class PacketManager {
 	 }
 
 	fun getInPacket(id: Int): InPacket? {
-		return inPackets.firstOrNull { (it as KClass<Packet>).getId() == id }?.createInstance()
+		return inPackets.firstOrNull { (it as KClass<Packet>).getId() == id || it.findAnnotation<AdditionalPacketIds>()?.ids?.contains(id) ?: false }?.createInstance()
 	}
 
 
