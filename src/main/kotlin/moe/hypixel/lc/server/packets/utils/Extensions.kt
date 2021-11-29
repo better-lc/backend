@@ -3,13 +3,9 @@ package moe.hypixel.lc.server.packets.utils
 import io.ktor.http.cio.websocket.*
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import kotlinx.coroutines.delay
 import moe.hypixel.lc.server.packets.OutPacket
 import moe.hypixel.lc.server.packets.Packet
 import moe.hypixel.lc.server.packets.PacketId
-import moe.hypixel.lc.server.packets.out.GiveCosmeticsPacket
-import moe.hypixel.lc.server.packets.out.Packet57
-import moe.hypixel.lc.server.packets.out.StaffModulePacket
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 

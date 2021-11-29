@@ -1,6 +1,7 @@
 package moe.hypixel.lc.server.packets.utils;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -45,7 +46,8 @@ public class ByteBufHelper {
 			throw new IOException("The received encoded string buffer length is less than zero! Weird string!");
 		}
 		try {
-			final byte[] data = buf.readBytes(i).array();
+
+			final byte[] data = ByteBufUtil.getBytes(buf.readBytes(i));
 			final String s = new String(data, Charset.defaultCharset());
 			if (s.length() > maxLength) {
 				throw new IOException("The received string length is longer than maximum allowed (" + s.length() + " > " + maxLength + ")");
