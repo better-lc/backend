@@ -26,3 +26,7 @@ fun ByteBuf.writeVarInt(input: Int) = ByteBufHelper.writeVarInt(this,input)
 fun ByteBuf.readVarInt() = ByteBufHelper.readVarInt(this)
 fun ByteBuf.readString(maxLength: Int): String = ByteBufHelper.readString(this, maxLength)
 fun ByteBuf.writeString(string: String) = ByteBufHelper.writeString(this, string)
+fun ByteBuf.writeVarIntList(list: List<Int>) {
+	writeVarInt(list.size)
+	for(elem in list) writeVarInt(elem)
+}
