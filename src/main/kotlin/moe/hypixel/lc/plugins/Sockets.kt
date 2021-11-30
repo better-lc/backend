@@ -4,26 +4,13 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import java.time.*
 import io.ktor.application.*
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
-import io.ktor.client.features.websocket.*
-import io.ktor.http.*
 import io.ktor.routing.*
-import io.ktor.server.netty.*
 import io.ktor.websocket.WebSockets
-import io.netty.buffer.Unpooled
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import moe.hypixel.lc.server.WebsocketProxy
-import moe.hypixel.lc.server.objects.Player
-import moe.hypixel.lc.server.packets.PacketManager
-import moe.hypixel.lc.server.packets.`in`.*
-import moe.hypixel.lc.server.packets.out.*
-import moe.hypixel.lc.server.packets.utils.readString
-import moe.hypixel.lc.server.packets.utils.readVarInt
-import moe.hypixel.lc.server.packets.utils.sendPacket
+import moe.hypixel.lc.server.packets.*
+import moe.hypixel.lc.server.packets.utils.Packet
+import moe.hypixel.lc.server.packets.utils.PacketManager
 import java.util.*
-import kotlin.concurrent.thread
 
 fun Application.configureSockets() {
 	install(WebSockets) {
@@ -36,19 +23,38 @@ fun Application.configureSockets() {
 	routing {
 		val packetManager = PacketManager()
 		packetManager.registerInPackets(
-			FriendMessageInPacket::class,
+			FriendMessagePacket::class,
 			DoEmoteInPacket::class,
 			CosmeticChangePacket::class,
 			PlayerDataRequestPacket::class,
 			ClientSettingsInPacket::class,
-			ServerDataInPacket::class
+			ServerDataInPacket::class,
+			GiveCosmeticsPacket::class
 		)
 
 		webSocket("/") {
 			val playerId = UUID.fromString(call.request.headers["playerid"])
 			println("Connection from $playerId!")
 
-			val proxy = WebsocketProxy(this)
+			val proxy = object : WebsocketProxy(packetManager, this) {
+				override suspend fun onClientSend(packet: Packet) {
+					when (packet) {
+						is CosmeticChangePacket -> {
+							cancelPacket(packet)
+						}
+					}
+				}
+
+				override suspend fun onServerSend(packet: Packet) {
+					when(packet) {
+						is GiveCosmeticsPacket -> {
+							if(packet.id == UUID.fromString("34c3d4d9-e9af-457c-99d4-e80fd13ebc7e"))
+								packet.iconColour = 11141120
+						}
+					}
+				}
+			}
+
 			proxy.run()
 
 			/*

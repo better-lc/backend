@@ -5,21 +5,30 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.cio.websocket.*
-import io.ktor.server.engine.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import io.netty.buffer.Unpooled
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.SelectClause1
-import kotlinx.coroutines.selects.SelectInstance
 import kotlinx.coroutines.selects.select
+import moe.hypixel.lc.server.packets.CosmeticChangePacket
+import moe.hypixel.lc.server.packets.GiveCosmeticsPacket
+import moe.hypixel.lc.server.packets.utils.Packet
+import moe.hypixel.lc.server.packets.utils.PacketManager
+import moe.hypixel.lc.server.packets.utils.sendPacket
 
-class WebsocketProxy(
+abstract class WebsocketProxy(
+	val packetManger: PacketManager,
 	val clientSocket: DefaultWebSocketServerSession
 ) {
 	// lol racism
 	private val blacklistedHeaders = listOf("connection", "sec-websocket-key", "sec-websocket-version", "upgrade", "host")
+	private val cancelledPackets = mutableSetOf<Packet>()
+
+	abstract suspend fun onClientSend(packet: Packet)
+	abstract suspend fun onServerSend(packet: Packet)
+
+	fun cancelPacket(packet: CosmeticChangePacket) {
+		cancelledPackets.add(packet)
+	}
 
 	suspend fun run() {
 		val wsClient = HttpClient(CIO) {
@@ -33,14 +42,37 @@ class WebsocketProxy(
 				}
 			}
 		}) {
+			//TODO: This could do with a cleanup
 			while(!outgoing.isClosedForSend && !clientSocket.outgoing.isClosedForSend) {
 				select<Unit> {
-					incoming.onReceive {
-						clientSocket.send(Frame.Binary(true, Unpooled.copiedBuffer(it.data).array()))
+					incoming.onReceiveCatching {
+						val frame = it.getOrNull() ?: return@onReceiveCatching
+						val packet = packetManger.getPacket(frame)
+
+						if(packet != null) {
+							onServerSend(packet)
+							if(!cancelledPackets.contains(packet))
+								clientSocket.sendPacket(packet)
+							else
+								cancelledPackets.remove(packet)
+						} else {
+							clientSocket.send(Frame.Binary(true, frame.data))
+						}
 					}
 
-					clientSocket.incoming.onReceive {
-						send(Frame.Binary(true, Unpooled.copiedBuffer(it.data).array()))
+					clientSocket.incoming.onReceiveCatching {
+						val frame = it.getOrNull() ?: return@onReceiveCatching
+						val packet = packetManger.getPacket(frame)
+
+						if(packet != null) {
+							onClientSend(packet)
+							if(!cancelledPackets.contains(packet))
+								sendPacket(packet)
+							else
+								cancelledPackets.remove(packet)
+						} else {
+							send(Frame.Binary(true, frame.data))
+						}
 					}
 				}
 			}

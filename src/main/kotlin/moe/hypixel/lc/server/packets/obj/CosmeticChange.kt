@@ -1,4 +1,4 @@
-package moe.hypixel.lc.server.packets.`in`.obj
+package moe.hypixel.lc.server.packets.obj
 
 data class CosmeticChange(
 	var id: Long,

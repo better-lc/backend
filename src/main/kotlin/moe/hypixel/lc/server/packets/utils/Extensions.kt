@@ -3,23 +3,21 @@ package moe.hypixel.lc.server.packets.utils
 import io.ktor.http.cio.websocket.*
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import moe.hypixel.lc.server.packets.OutPacket
-import moe.hypixel.lc.server.packets.Packet
-import moe.hypixel.lc.server.packets.PacketId
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 
 fun Packet.getId() = javaClass.kotlin.getId()
 fun KClass<Packet>.getId() = findAnnotation<PacketId>()!!.id
 
-suspend fun WebSocketSession.sendPacket(outPacket: OutPacket) {
+suspend fun WebSocketSession.sendPacket(packet: Packet) {
 	val buf = Unpooled.buffer()
 
-	buf.writeVarInt(outPacket.getId())
+	buf.writeVarInt(packet.getId())
 
-	outPacket.write(buf)
+	packet.write(buf)
 
 	send(buf.array())
+	buf.release()
 }
 
 fun ByteBuf.writeVarInt(input: Int) = ByteBufHelper.writeVarInt(this,input)
