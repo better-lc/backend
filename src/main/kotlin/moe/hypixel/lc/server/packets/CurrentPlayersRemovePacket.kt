@@ -5,8 +5,7 @@ import moe.hypixel.lc.server.packets.utils.*
 import java.util.*
 
 @PacketId(50)
-@AdditionalPacketIds(48)
-class PlayerDataRequestPacket(
+class CurrentPlayersRemovePacket(
 	var requestedPlayers: MutableList<UUID>
 ): Packet {
 	constructor(): this(mutableListOf())

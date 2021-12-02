@@ -8,7 +8,9 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import io.netty.buffer.Unpooled
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import moe.hypixel.lc.server.packets.CosmeticChangePacket
 import moe.hypixel.lc.server.packets.GiveCosmeticsPacket
 import moe.hypixel.lc.server.packets.utils.Packet
@@ -16,17 +18,17 @@ import moe.hypixel.lc.server.packets.utils.PacketManager
 import moe.hypixel.lc.server.packets.utils.sendPacket
 
 abstract class WebsocketProxy(
-	val packetManger: PacketManager,
 	val clientSocket: DefaultWebSocketServerSession
 ) {
 	// lol racism
 	private val blacklistedHeaders = listOf("connection", "sec-websocket-key", "sec-websocket-version", "upgrade", "host")
 	private val cancelledPackets = mutableSetOf<Packet>()
+	val packetManger = PacketManager.createDefault()
 
 	abstract suspend fun onClientSend(packet: Packet)
 	abstract suspend fun onServerSend(packet: Packet)
 
-	fun cancelPacket(packet: CosmeticChangePacket) {
+	fun cancelPacket(packet: Packet) {
 		cancelledPackets.add(packet)
 	}
 
@@ -56,7 +58,10 @@ abstract class WebsocketProxy(
 							else
 								cancelledPackets.remove(packet)
 						} else {
-							clientSocket.send(Frame.Binary(true, frame.data))
+							val packetData = Unpooled.copiedBuffer(frame.data)
+							val data = packetData.array()
+							packetData.release()
+							clientSocket.send(Frame.Binary(true, data))
 						}
 					}
 
@@ -71,7 +76,10 @@ abstract class WebsocketProxy(
 							else
 								cancelledPackets.remove(packet)
 						} else {
-							send(Frame.Binary(true, frame.data))
+							val packetData = Unpooled.copiedBuffer(frame.data)
+							val data = packetData.array()
+							packetData.release()
+							send(Frame.Binary(true, data))
 						}
 					}
 				}

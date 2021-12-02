@@ -11,7 +11,6 @@ class EmoteGivePacket(
 	var emotes: MutableSet<Int>,
 	var equippedEmotes: MutableSet<Int>
 ): Packet {
-
 	constructor(): this(mutableSetOf(), mutableSetOf())
 
 	override fun write(buf: ByteBuf) {

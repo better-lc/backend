@@ -14,19 +14,28 @@ class GiveCosmeticsPacket(
 	var iconColour: Int,
 	var firstBoolean: Boolean,
 	var secondBoolean: Boolean,
-	var thirdBoolean: Boolean
+	var thirdBoolean: Boolean,
+	var all: Boolean
 ): Packet {
 	@Deprecated("", level = DeprecationLevel.ERROR)
-	constructor(): this(UUID.randomUUID(), mutableSetOf(), -1, true, true, true)
+	constructor(): this(UUID.randomUUID(), mutableSetOf(), -1, true, true, true, false)
 
 	override fun write(buf: ByteBuf) {
 		buf.writeLong(id.mostSignificantBits)
 		buf.writeLong(id.leastSignificantBits)
 
-		buf.writeVarInt(1973)
-		for(i in 1..1973) {
-			buf.writeVarInt(i)
-			buf.writeBoolean(enabledCosmetics.contains(i))
+		if(all) {
+			buf.writeVarInt(1973)
+			for(i in 1..1973) {
+				buf.writeVarInt(i)
+				buf.writeBoolean(enabledCosmetics.contains(i))
+			}
+		} else {
+			buf.writeVarInt(enabledCosmetics.size)
+			for(cosmetic in enabledCosmetics) {
+				buf.writeVarInt(cosmetic)
+				buf.writeBoolean(true)
+			}
 		}
 
 		buf.writeInt(iconColour)

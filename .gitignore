@@ -80,3 +80,5 @@ gradlew.bat
 build
 grade/*
 gradle/wrapper
+.env
+env.sh

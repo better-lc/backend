@@ -3,6 +3,7 @@ package moe.hypixel.lc.server.packets.utils
 import io.ktor.http.cio.websocket.*
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import moe.hypixel.lc.server.packets.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
@@ -42,9 +43,32 @@ class PacketManager {
 		inPackets.add(packetClass)
 	}
 
-	fun registerInPackets(vararg packetClasses: KClass<out Packet>) {
+	fun registerPackets(vararg packetClasses: KClass<out Packet>) {
 		for(packetClass in packetClasses) {
 			registerInPacket(packetClass)
+		}
+	}
+
+	companion object {
+		fun createDefault(): PacketManager {
+			val packetManager = PacketManager()
+			packetManager.registerPackets(
+				BanMessagePacket::class,
+				ChatMessagePacket::class,
+				ClientSettingsInPacket::class,
+				CosmeticChangePacket::class,
+				DoEmoteInPacket::class,
+				DoEmoteOutPacket::class,
+				EmoteGivePacket::class,
+				FriendMessagePacket::class,
+				//TODO: Implement
+				//FriendsListPacket::class,
+				GiveCosmeticsPacket::class,
+				CurrentPlayersRemovePacket::class,
+				CurrentPlayersAddPacket::class,
+				ServerDataInPacket::class
+			)
+			return packetManager
 		}
 	}
 }

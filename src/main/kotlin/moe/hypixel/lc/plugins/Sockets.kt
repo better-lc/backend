@@ -6,10 +6,12 @@ import java.time.*
 import io.ktor.application.*
 import io.ktor.routing.*
 import io.ktor.websocket.WebSockets
+import moe.hypixel.lc.cache.Cache
+import moe.hypixel.lc.database.Database
 import moe.hypixel.lc.server.WebsocketProxy
 import moe.hypixel.lc.server.packets.*
 import moe.hypixel.lc.server.packets.utils.Packet
-import moe.hypixel.lc.server.packets.utils.PacketManager
+import moe.hypixel.lc.utils.instance
 import java.util.*
 
 fun Application.configureSockets() {
@@ -20,26 +22,22 @@ fun Application.configureSockets() {
 		masking = false
 	}
 
-	routing {
-		val packetManager = PacketManager()
-		packetManager.registerInPackets(
-			FriendMessagePacket::class,
-			DoEmoteInPacket::class,
-			CosmeticChangePacket::class,
-			PlayerDataRequestPacket::class,
-			ClientSettingsInPacket::class,
-			ServerDataInPacket::class,
-			GiveCosmeticsPacket::class
-		)
+	val db by instance<Database>()
+	val cache by instance<Cache>()
 
+	routing {
 		webSocket("/") {
 			val playerId = UUID.fromString(call.request.headers["playerid"])
 			println("Connection from $playerId!")
 
-			val proxy = object : WebsocketProxy(packetManager, this) {
+			val proxy = object : WebsocketProxy(this) {
 				override suspend fun onClientSend(packet: Packet) {
 					when (packet) {
 						is CosmeticChangePacket -> {
+							cancelPacket(packet)
+						}
+
+						is DoEmoteInPacket -> {
 							cancelPacket(packet)
 						}
 					}
@@ -48,8 +46,22 @@ fun Application.configureSockets() {
 				override suspend fun onServerSend(packet: Packet) {
 					when(packet) {
 						is GiveCosmeticsPacket -> {
-							if(packet.id == UUID.fromString("34c3d4d9-e9af-457c-99d4-e80fd13ebc7e"))
-								packet.iconColour = 11141120
+							val playerExists = cache.playerExists(packet.id)
+
+							if(playerExists) {
+								val user = db.userRepo.getUser(packet.id)
+								packet.iconColour = user.rank.colour
+							}
+
+							if (packet.id == playerId)
+								packet.all = true
+						}
+
+						is EmoteGivePacket -> {
+							packet.emotes.clear()
+							for(i in 1 until 200) {
+								packet.emotes.add(i)
+							}
 						}
 					}
 				}
