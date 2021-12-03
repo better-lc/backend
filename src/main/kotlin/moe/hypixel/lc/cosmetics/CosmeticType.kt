@@ -1,13 +1,19 @@
 package moe.hypixel.lc.cosmetics
 
-enum class CosmeticType {
-	CAPE,
-	HAT,
-	MASK,
-	BANDANNA,
-	TIE,
-	WINGS,
-	BACKPACK;
+enum class CosmeticType(
+	val sqlName: String
+) {
+	CAPE("cape"),
+	HAT("hat"),
+	MASK("mask"),
+	BANDANNA("bandanna"),
+	TIE("tie"),
+	WINGS("wings"),
+	BACKPACK("backpack");
+
+	fun sqlName(): String {
+		return "${sqlName}_id"
+	}
 
 	companion object {
 		fun fromString(type: String, subType: String): CosmeticType {

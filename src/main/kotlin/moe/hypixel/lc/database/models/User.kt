@@ -68,4 +68,8 @@ class User: DatabaseDeserializable {
 			backpackId
 		)
 	}
+
+	fun cosmeticEnabled(id: Int): Boolean {
+		return getCosmetics().contains(id)
+	}
 }

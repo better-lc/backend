@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf
 import moe.hypixel.lc.server.packets.utils.*
 import java.util.*
 
-@PacketId(50)
-class CurrentPlayersRemovePacket(
+@PacketId(48)
+class AddTrackedPlayersPacket(
 	var requestedPlayers: MutableList<UUID>
 ): Packet {
 	constructor(): this(mutableListOf())

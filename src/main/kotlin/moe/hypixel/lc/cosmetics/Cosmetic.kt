@@ -1,7 +1,7 @@
 package moe.hypixel.lc.cosmetics
 
 data class Cosmetic(
-	var id: Long,
+	var id: Int,
 	var someFloat: Float,
 	var texture: String,
 	var name: String,

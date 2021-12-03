@@ -10,6 +10,9 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
+import moe.hypixel.lc.database.models.User
+import moe.hypixel.lc.database.models.user.UserRank
+import moe.hypixel.lc.server.packets.obj.PlayerCosmetic
 
 class CosmeticManager {
 	private var cosmetics = mutableSetOf<Cosmetic>()
@@ -61,7 +64,7 @@ class CosmeticManager {
 		val parsedIndex = csvReader().readAll(indexFileBody)
 		for(cosmeticData in parsedIndex.filter { it[2] != "EMPTY" }) {
 			cosmetics.add(Cosmetic(
-				cosmeticData[0].toLong(), // id
+				cosmeticData[0].toInt(), // id
 				cosmeticData[1].toFloat(), // some float
 				cosmeticData[2], // texture
 				cosmeticData[3], // name
@@ -73,7 +76,9 @@ class CosmeticManager {
 		}
 	}
 
-	fun getCosmetic(id: Long) = cosmetics.firstOrNull { it.id == id }
+	fun getCosmetic(id: Int) = cosmetics.firstOrNull { it.id == id }
+
+	fun getPlayerCosmetics(user: User): List<PlayerCosmetic> = cosmetics.filter { user.rank.isBlacklistedCosmetic(it) }.map { PlayerCosmetic(it.id, user.cosmeticEnabled(it.id)) }
 
 	companion object {
 		suspend fun create(): CosmeticManager {

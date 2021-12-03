@@ -64,8 +64,8 @@ class PacketManager {
 				//TODO: Implement
 				//FriendsListPacket::class,
 				GiveCosmeticsPacket::class,
-				CurrentPlayersRemovePacket::class,
-				CurrentPlayersAddPacket::class,
+				RemoveTrackedPlayersPacket::class,
+				AddTrackedPlayersPacket::class,
 				ServerDataInPacket::class
 			)
 			return packetManager

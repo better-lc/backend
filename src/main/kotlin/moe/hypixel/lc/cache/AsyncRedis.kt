@@ -34,6 +34,10 @@ class AsyncRedis(
 		return client.del(key).await() == 1L
 	}
 
+	suspend fun broadcast(channel: String, data: String): Long {
+		return client.publish(channel, data).await()
+	}
+
 	companion object {
 		fun create(uri: String): AsyncRedis {
 			return create(RedisURI.create(uri))

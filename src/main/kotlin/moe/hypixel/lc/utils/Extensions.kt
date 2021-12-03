@@ -2,9 +2,12 @@ package moe.hypixel.lc.utils
 
 import com.eatthepath.uuid.FastUUID
 import io.ktor.application.*
+import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.websocket.*
+import moe.hypixel.lc.cosmetics.Cosmetic
+import moe.hypixel.lc.cosmetics.CosmeticType
 import org.kodein.di.DIProperty
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
@@ -28,3 +31,42 @@ val playerIdAttribute = AttributeKey<UUID>("playerId")
 var WebSocketServerSession.playerId: UUID
 	get() = call.attributes[playerIdAttribute]
 	set(value) = call.attributes.put(playerIdAttribute, value)
+
+val websocketsAttribute = AttributeKey<MutableSet<WebSocketServerSession>>("websockets")
+
+val WebSocketServerSession.sockets
+	get() = application.attributes[websocketsAttribute]
+
+val playersKey = AttributeKey<MutableSet<UUID>>("players")
+
+var WebSocketServerSession.players
+	get() = call.attributes[playersKey]
+	set(value) = call.attributes.put(playersKey, value)
+
+operator fun Set<Cosmetic>.component1(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.CAPE }
+}
+
+operator fun Set<Cosmetic>.component2(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.HAT }
+}
+
+operator fun Set<Cosmetic>.component3(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.MASK }
+}
+
+operator fun Set<Cosmetic>.component4(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.BANDANNA }
+}
+
+operator fun Set<Cosmetic>.component5(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.TIE }
+}
+
+operator fun Set<Cosmetic>.component6(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.WINGS }
+}
+
+operator fun Set<Cosmetic>.component7(): Cosmetic? {
+	return firstOrNull { it.type == CosmeticType.BACKPACK }
+}

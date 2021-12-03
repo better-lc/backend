@@ -20,18 +20,20 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.ktor.closestDI
 
-abstract class WebsocketProxy(
-	val clientSocket: DefaultWebSocketServerSession
+class WebsocketProxy(
+	val clientSocket: DefaultWebSocketServerSession,
+	val handler: WebsocketProxyHandler
 ): DIAware {
 	override val di by lazy { clientSocket.application.closestDI() }
+
+	init {
+		handler.proxy = this
+	}
 
 	// lol racism
 	private val blacklistedHeaders = listOf("connection", "sec-websocket-key", "sec-websocket-version", "upgrade", "host")
 	private val cancelledPackets = mutableSetOf<Packet>()
 	val packetManger = PacketManager.createDefault()
-
-	abstract suspend fun onClientSend(packet: Packet)
-	abstract suspend fun onServerSend(packet: Packet)
 
 	fun cancelPacket(packet: Packet) {
 		cancelledPackets.add(packet)
@@ -57,7 +59,7 @@ abstract class WebsocketProxy(
 						val packet = packetManger.getPacket(frame)
 
 						if(packet != null) {
-							onServerSend(packet)
+							handler.onServerSend(packet)
 							if(!cancelledPackets.contains(packet))
 								clientSocket.sendPacket(packet)
 							else
@@ -75,7 +77,7 @@ abstract class WebsocketProxy(
 						val packet = packetManger.getPacket(frame)
 
 						if(packet != null) {
-							onClientSend(packet)
+							handler.onClientSend(packet)
 							if(!cancelledPackets.contains(packet))
 								sendPacket(packet)
 							else
