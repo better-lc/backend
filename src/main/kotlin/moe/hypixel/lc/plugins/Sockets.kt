@@ -1,18 +1,19 @@
 package moe.hypixel.lc.plugins
 
+import com.eatthepath.uuid.FastUUID
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import java.time.*
 import io.ktor.application.*
 import io.ktor.routing.*
 import io.ktor.websocket.WebSockets
-import moe.hypixel.lc.cache.Cache
-import moe.hypixel.lc.database.Database
 import moe.hypixel.lc.server.WebsocketProxy
+import moe.hypixel.lc.server.handlers.handleChangeCosmetics
+import moe.hypixel.lc.server.handlers.handleGiveCosmetics
 import moe.hypixel.lc.server.packets.*
 import moe.hypixel.lc.server.packets.utils.Packet
-import moe.hypixel.lc.utils.instance
-import java.util.*
+import moe.hypixel.lc.server.packets.utils.sendPacket
+import moe.hypixel.lc.utils.playerId
 
 fun Application.configureSockets() {
 	install(WebSockets) {
@@ -22,19 +23,18 @@ fun Application.configureSockets() {
 		masking = false
 	}
 
-	val db by instance<Database>()
-	val cache by instance<Cache>()
-
 	routing {
 		webSocket("/") {
-			val playerId = UUID.fromString(call.request.headers["playerid"])
+			playerId = FastUUID.parseUUID(call.request.headers["playerid"])
 			println("Connection from $playerId!")
 
 			val proxy = object : WebsocketProxy(this) {
 				override suspend fun onClientSend(packet: Packet) {
 					when (packet) {
-						is CosmeticChangePacket -> {
-							cancelPacket(packet)
+						is CosmeticChangePacket -> handleChangeCosmetics(this@webSocket, packet)
+
+						is ServerDataInPacket -> {
+							sendPacket(ChatMessagePacket("Thank you for using BetterLC!\nhttps://discord.gg/JtM5FFhArY"))
 						}
 
 						is DoEmoteInPacket -> {
@@ -45,17 +45,7 @@ fun Application.configureSockets() {
 
 				override suspend fun onServerSend(packet: Packet) {
 					when(packet) {
-						is GiveCosmeticsPacket -> {
-							val playerExists = cache.playerExists(packet.id)
-
-							if(playerExists) {
-								val user = db.userRepo.getUser(packet.id)
-								packet.iconColour = user.rank.colour
-							}
-
-							if (packet.id == playerId)
-								packet.all = true
-						}
+						is GiveCosmeticsPacket -> handleGiveCosmetics(this@webSocket, packet)
 
 						is EmoteGivePacket -> {
 							packet.emotes.clear()

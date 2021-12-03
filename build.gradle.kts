@@ -40,6 +40,7 @@ dependencies {
 	implementation("io.ktor:ktor-client-apache:$ktor_version")
 	implementation("io.ktor:ktor-client-cio:$ktor_version")
 	implementation("io.ktor:ktor-server-netty:$ktor_version")
+	implementation("io.ktor:ktor-client-serialization:$ktor_version")
 	implementation("org.kodein.di:kodein-di:$kodein_version")
 	implementation("org.kodein.di:kodein-di-jvm:$kodein_version")
 	implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
@@ -50,4 +51,5 @@ dependencies {
 	//! If this breaks check version numbers and try remove "-RC"
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlin_version-RC")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-properties:1.3.1")
+	implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.2.0")
 }

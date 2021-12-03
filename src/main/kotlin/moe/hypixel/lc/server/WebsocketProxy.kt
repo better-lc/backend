@@ -16,10 +16,15 @@ import moe.hypixel.lc.server.packets.GiveCosmeticsPacket
 import moe.hypixel.lc.server.packets.utils.Packet
 import moe.hypixel.lc.server.packets.utils.PacketManager
 import moe.hypixel.lc.server.packets.utils.sendPacket
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.ktor.closestDI
 
 abstract class WebsocketProxy(
 	val clientSocket: DefaultWebSocketServerSession
-) {
+): DIAware {
+	override val di by lazy { clientSocket.application.closestDI() }
+
 	// lol racism
 	private val blacklistedHeaders = listOf("connection", "sec-websocket-key", "sec-websocket-version", "upgrade", "host")
 	private val cancelledPackets = mutableSetOf<Packet>()
