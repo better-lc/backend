@@ -78,7 +78,9 @@ class CosmeticManager {
 
 	fun getCosmetic(id: Int) = cosmetics.firstOrNull { it.id == id }
 
-	fun getPlayerCosmetics(user: User): List<PlayerCosmetic> = cosmetics.filter { user.rank.isBlacklistedCosmetic(it) }.map { PlayerCosmetic(it.id, user.cosmeticEnabled(it.id)) }
+	fun getCosmetics(): Set<Cosmetic> {
+		return cosmetics
+	}
 
 	companion object {
 		suspend fun create(): CosmeticManager {

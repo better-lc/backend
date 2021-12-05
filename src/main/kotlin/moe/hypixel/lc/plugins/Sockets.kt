@@ -7,18 +7,23 @@ import java.time.*
 import io.ktor.application.*
 import io.ktor.routing.*
 import io.ktor.websocket.WebSockets
+import moe.hypixel.lc.database.models.User
+import moe.hypixel.lc.database.models.user.UserFlag
+import moe.hypixel.lc.database.models.user.UserFlags
+import moe.hypixel.lc.database.models.user.UserRank
+import moe.hypixel.lc.database.models.user.fromBits
 import moe.hypixel.lc.server.WebsocketProxy
 import moe.hypixel.lc.server.WebsocketProxyHandler
-import moe.hypixel.lc.server.handlers.handleChangeCosmetics
-import moe.hypixel.lc.server.handlers.handleGiveCosmetics
-import moe.hypixel.lc.server.handlers.handleTrackedPlayersAdd
+import moe.hypixel.lc.server.handlers.*
 import moe.hypixel.lc.server.packets.*
 import moe.hypixel.lc.server.packets.utils.Packet
 import moe.hypixel.lc.server.packets.utils.sendPacket
 import moe.hypixel.lc.utils.playerId
 import moe.hypixel.lc.utils.players
 import moe.hypixel.lc.utils.sockets
+import org.bson.types.ObjectId
 import org.kodein.di.ktor.closestDI
+import org.litote.kmongo.newId
 
 fun Application.configureSockets() {
 	install(WebSockets) {
@@ -38,25 +43,41 @@ fun Application.configureSockets() {
 			println("Connection from $playerId!")
 
 			val proxy = WebsocketProxy(this, object : WebsocketProxyHandler(closestDI()) {
+				override suspend fun onOpen() {
+					println("onOpen called!")
+
+					val user = db.userRepo.get(playerId)
+
+					if(user == null) {
+						db.userRepo.create(
+							User(
+								null,
+								playerId,
+								UserRank.DEFAULT,
+								fromBits(0),
+								null,
+								mutableMapOf(),
+								mutableListOf(),
+								mutableMapOf()
+							)
+						)
+					}
+				}
+
 				override suspend fun onClientSend(packet: Packet) {
 					when (packet) {
 						is CosmeticChangePacket -> handleChangeCosmetics(packet)
 						is ServerDataInPacket -> sendPacket(ChatMessagePacket("Thank you for using BetterLC!\nhttps://discord.gg/JtM5FFhArY"))
-						is DoEmoteInPacket -> cancelPacket(packet)
+						is DoEmoteInPacket -> handleEmoteInPacket(packet)
 						is AddTrackedPlayersPacket -> handleTrackedPlayersAdd(packet)
+						is RemoveTrackedPlayersPacket -> handleTrackedPlayersRemove(packet)
 					}
 				}
 
 				override suspend fun onServerSend(packet: Packet) {
 					when(packet) {
 						is GiveCosmeticsPacket -> handleGiveCosmetics(packet)
-
-						is EmoteGivePacket -> {
-							packet.emotes.clear()
-							for(i in 1 until 200) {
-								packet.emotes.add(i)
-							}
-						}
+						is EmoteGivePacket -> cancelPacket(packet)
 					}
 				}
 			})

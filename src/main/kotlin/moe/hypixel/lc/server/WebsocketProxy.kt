@@ -33,7 +33,7 @@ class WebsocketProxy(
 	// lol racism
 	private val blacklistedHeaders = listOf("connection", "sec-websocket-key", "sec-websocket-version", "upgrade", "host")
 	private val cancelledPackets = mutableSetOf<Packet>()
-	val packetManger = PacketManager.createDefault()
+	val packetManger = PacketManager.createDefault(di)
 
 	fun cancelPacket(packet: Packet) {
 		cancelledPackets.add(packet)
@@ -51,6 +51,7 @@ class WebsocketProxy(
 				}
 			}
 		}) {
+			handler.onOpen()
 			//TODO: This could do with a cleanup
 			while(!outgoing.isClosedForSend && !clientSocket.outgoing.isClosedForSend) {
 				select<Unit> {
@@ -79,7 +80,7 @@ class WebsocketProxy(
 						if(packet != null) {
 							handler.onClientSend(packet)
 							if(!cancelledPackets.contains(packet))
-								sendPacket(packet)
+								sendPacket(di, packet)
 							else
 								cancelledPackets.remove(packet)
 						} else {

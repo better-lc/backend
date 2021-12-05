@@ -11,4 +11,5 @@
 	<logger name="io.netty" level="OFF"/>
 	<logger name="com.github.jasync.sql.db" level="OFF"/>
 	<logger name="io.lettuce.core" level="OFF" />
+	<logger name="org.mongodb.driver" level="OFF" />
 </configuration>

@@ -19,7 +19,12 @@ enum class CosmeticType(
 		fun fromString(type: String, subType: String): CosmeticType {
 			return when(type) {
 				"cape" -> CAPE
-				"hat" -> HAT
+				"hat" -> {
+					return when(subType) {
+						"mask" -> MASK
+						else -> HAT
+					}
+				}
 				"mask" -> MASK
 				"bandanna" -> BANDANNA
 				"face_bandanna" -> BANDANNA

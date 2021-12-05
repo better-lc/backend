@@ -8,7 +8,6 @@ import moe.hypixel.lc.cache.AsyncRedis
 import moe.hypixel.lc.cache.Cache
 import moe.hypixel.lc.cosmetics.CosmeticManager
 import moe.hypixel.lc.database.Database
-import moe.hypixel.lc.database.DatabaseConnection
 import moe.hypixel.lc.plugins.*
 import moe.hypixel.lc.utils.instance
 import moe.hypixel.lc.utils.websocketsAttribute
@@ -22,7 +21,7 @@ fun main() {
 
 		module {
 			di {
-				bind<Database>() with singleton { Database(DatabaseConnection(System.getenv("DATABASE_URI"))) }
+				bind<Database>() with singleton { Database.create(System.getenv("DATABASE_URI"), System.getenv("DATABASE_NAME")) }
 				bind<AsyncRedis>() with singleton { AsyncRedis.create(System.getenv("REDIS_URI")) }
 
 				bind<Cache>() with singleton {

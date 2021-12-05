@@ -45,7 +45,9 @@ dependencies {
 	implementation("org.kodein.di:kodein-di-jvm:$kodein_version")
 	implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
 	implementation("ch.qos.logback:logback-classic:$logback_version")
-	implementation("com.github.jasync-sql:jasync-mysql:$jasync_version")
+//	implementation("com.github.jasync-sql:jasync-mysql:$jasync_version")
+	implementation("org.mongodb:mongodb-driver-reactivestreams:4.4.0")
+	implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.4.0")
 	implementation("io.lettuce:lettuce-core:6.1.5.RELEASE")
 	implementation("com.eatthepath:fast-uuid:0.2.0")
 	//! If this breaks check version numbers and try remove "-RC"

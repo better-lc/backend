@@ -1,6 +1,8 @@
 package moe.hypixel.lc.server
 
 import io.ktor.websocket.*
+import io.netty.buffer.Unpooled
+import io.netty.util.CharsetUtil.encoder
 import moe.hypixel.lc.cache.AsyncRedis
 import moe.hypixel.lc.cache.Cache
 import moe.hypixel.lc.cosmetics.CosmeticManager
@@ -38,13 +40,18 @@ abstract class WebsocketProxyHandler(override val di: DI): DIAware {
 	}
 
 	suspend fun broadcastCosmeticChange(packet: GiveCosmeticsPacket) {
-		redis.broadcast("cosmetics", "test")
+		val buf = Unpooled.buffer()
+		packet.setDI(di)
+		packet.write(buf)
+		redis.broadcast("cosmetics", Base64.getEncoder().encodeToString(buf.array()))
+		buf.release()
 
-		for(socket in sockets.filter { it.players.contains(packet.id) }) {
-			socket.sendPacket(packet)
+		for(socket in sockets.filter { it.players.contains(packet.id) }.filter { it != socket }) {
+			socket.sendPacket(di, packet)
 		}
 	}
 
 	abstract suspend fun onClientSend(packet: Packet)
 	abstract suspend fun onServerSend(packet: Packet)
+	abstract suspend fun onOpen()
 }

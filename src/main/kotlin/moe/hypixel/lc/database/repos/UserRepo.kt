@@ -1,47 +1,24 @@
 package moe.hypixel.lc.database.repos
 
-import com.github.jasync.sql.db.QueryResult
-import moe.hypixel.lc.cosmetics.Cosmetic
-import moe.hypixel.lc.database.DatabaseConnection
+import com.mongodb.client.result.InsertOneResult
+import com.mongodb.client.result.UpdateResult
 import moe.hypixel.lc.database.models.User
-import moe.hypixel.lc.utils.*
+import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.eq
 import java.util.*
 
 class UserRepo(
-	val connection: DatabaseConnection
+	val database: CoroutineDatabase
 ) {
-	suspend fun getUser(id: UUID) = connection.querySingle<User>("INSERT INTO users (id) VALUES (?) ON DUPLICATE KEY UPDATE id=id RETURNING *;", listOf(id.asString()))!!
+	val collection = database.getCollection<User>("users")
 
-	suspend fun setUserCosmetics(id: UUID, cosmetics: Set<Cosmetic>): QueryResult {
-		val (
-			cape,
-			hat,
-			mask,
-			bandanna,
-			tie,
-			wings,
-			backpack
-		) = cosmetics
+	suspend fun get(id: UUID): User? = collection.findOne(User::uuid eq id)
+	suspend fun save(user: User): UpdateResult {
+		// validate cosmetics
+		return collection.updateOneById(user.id, user)
+	}
 
-		return connection.execute("""
-			UPDATE users SET
-				cape_id=?,
-				hat_id=?,
-				mask_id=?,
-				bandanna_id=?,
-				tie_id=?,
-				wings_id=?,
-				backpack_id=?
-			WHERE id=?;
-		""".trimIndent(), listOf(
-			cape?.id,
-			hat?.id,
-			mask?.id,
-			bandanna?.id,
-			tie?.id,
-			wings?.id,
-			backpack?.id,
-			id.asString(),
-		))
+	suspend fun create(user: User): InsertOneResult {
+		return collection.insertOne(user)
 	}
 }

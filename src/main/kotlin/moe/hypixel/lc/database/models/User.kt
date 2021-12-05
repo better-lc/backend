@@ -1,75 +1,36 @@
 package moe.hypixel.lc.database.models
 
-import com.eatthepath.uuid.FastUUID
-import com.github.jasync.sql.db.RowData
-import moe.hypixel.lc.database.DatabaseDeserializable
-import moe.hypixel.lc.database.database
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import moe.hypixel.lc.cosmetics.CosmeticType
 import moe.hypixel.lc.database.models.user.UserFlags
 import moe.hypixel.lc.database.models.user.UserRank
-import moe.hypixel.lc.database.models.user.fromBits
-import moe.hypixel.lc.database.nullError
-import moe.hypixel.lc.utils.dashUUID
-import moe.hypixel.lc.utils.notNullSet
+import moe.hypixel.lc.database.serializers.UserFlagsSerializer
+import org.bson.types.ObjectId
 import java.util.*
 
-class User: DatabaseDeserializable {
-	var id by database<UUID>()
-	var rank by database<UserRank>()
-	var flags by database<UserFlags>()
+@Serializable
+data class User(
+	@SerialName("_id")
+	@Contextual
+	var _id: ObjectId?,
 
-	var discordId: String? = null
-	var capeId: Int? = null
-	var hatId: Int? = null
-	var maskId: Int? = null
-	var bandannaId: Int? = null
-	var tieId: Int? = null
-	var wingsId: Int? = null
-	var backpackId: Int? = null
+	@Contextual
+	var uuid: UUID,
 
-	override fun deserialize(row: RowData) {
-		id = FastUUID.parseUUID(row.getString("id")?.dashUUID() ?: nullError(this::id))
-		discordId = row.getString("discord_id")
+	var rank: UserRank,
 
-		rank = UserRank.fromId(
-			row.getInt("rank") ?: nullError(this::rank)
-		) ?: nullError(this::rank)
-
-		flags = fromBits(row.getInt("flags") ?: nullError(this::flags))
-
-		capeId = row.getInt("cape_id")
-		hatId = row.getInt("hat_id")
-		maskId = row.getInt("mask_id")
-		bandannaId = row.getInt("bandanna_id")
-		tieId = row.getInt("tie_id")
-		wingsId = row.getInt("wings_id")
-		backpackId = row.getInt("backpack_id")
-	}
-
-	fun hasCosmetics(): Boolean {
-		return (
-			capeId != null ||
-			hatId != null ||
-			maskId != null ||
-			bandannaId != null ||
-			tieId != null ||
-			wingsId != null ||
-			backpackId != null
-		)
-	}
-
-	fun getCosmetics(): MutableSet<Int> {
-		return notNullSet(
-			capeId,
-			hatId,
-			maskId,
-			bandannaId,
-			tieId,
-			wingsId,
-			backpackId
-		)
-	}
-
-	fun cosmeticEnabled(id: Int): Boolean {
-		return getCosmetics().contains(id)
-	}
+	@Serializable(UserFlagsSerializer::class)
+	var flags: UserFlags,
+	var discordId: String?,
+	var cosmetics: MutableMap<CosmeticType, Int>,
+	var equippedEmotes: MutableList<Int>,
+	var settings: MutableMap<String, String>
+) {
+	var id: ObjectId
+		get() = _id!!
+		set(value) {
+			_id = value
+		}
 }

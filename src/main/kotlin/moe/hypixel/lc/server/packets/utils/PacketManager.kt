@@ -4,12 +4,15 @@ import io.ktor.http.cio.websocket.*
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import moe.hypixel.lc.server.packets.*
+import org.kodein.di.DI
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
 
-class PacketManager {
+class PacketManager(
+	val di: DI
+) {
 	private val inPackets = mutableSetOf<KClass<out Packet>>()
 
 	fun getPacket(frame: Frame): Packet? {
@@ -22,6 +25,7 @@ class PacketManager {
 
 	fun getPacket(buf: ByteBuf): Packet? {
 		val id = buf.readVarInt()
+		println("Received packet with id $id")
 		val packet = getPacket(id)
 		packet?.read(buf)
 		buf.release()
@@ -29,11 +33,17 @@ class PacketManager {
 	}
 
 	fun getPacket(id: Int): Packet? {
-		return inPackets.firstOrNull {
+		val packet = inPackets.firstOrNull {
 			(it as KClass<Packet>).getId() == id || it.findAnnotation<AdditionalPacketIds>()?.ids?.contains(
 				id
 			) ?: false
 		}?.createInstance()
+
+		if(packet is DIPacket) {
+			packet.setDI(di)
+		}
+
+		return packet
 	}
 
 	fun registerInPacket(packetClass: KClass<out Packet>) {
@@ -50,8 +60,9 @@ class PacketManager {
 	}
 
 	companion object {
-		fun createDefault(): PacketManager {
-			val packetManager = PacketManager()
+		fun createDefault(di: DI): PacketManager {
+			val packetManager = PacketManager(di)
+
 			packetManager.registerPackets(
 				BanMessagePacket::class,
 				ChatMessagePacket::class,
@@ -66,8 +77,10 @@ class PacketManager {
 				GiveCosmeticsPacket::class,
 				RemoveTrackedPlayersPacket::class,
 				AddTrackedPlayersPacket::class,
-				ServerDataInPacket::class
+				ServerDataInPacket::class,
+				EquipEmotesPacket::class
 			)
+
 			return packetManager
 		}
 	}

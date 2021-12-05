@@ -11,11 +11,14 @@ class ClientSettingsInPacket(
 	constructor(): this(mutableMapOf(), "")
 
 	override fun write(buf: ByteBuf) {
-		buf.writeVarInt(data.size)
+		buf.writeVarInt(data.size+1)
 		for((k,v) in data) {
 			buf.writeString(k)
 			buf.writeBoolean(v)
 		}
+
+		buf.writeString("renderClothCloaks")
+		buf.writeBoolean(true)
 
 		buf.writeString(msg)
 	}
