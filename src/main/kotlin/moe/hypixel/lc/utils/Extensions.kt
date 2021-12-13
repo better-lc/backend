@@ -8,6 +8,8 @@ import io.ktor.util.*
 import io.ktor.websocket.*
 import moe.hypixel.lc.cosmetics.Cosmetic
 import moe.hypixel.lc.cosmetics.CosmeticType
+import moe.hypixel.lc.server.objects.OfflinePlayer
+import moe.hypixel.lc.server.objects.Player
 import org.kodein.di.DIProperty
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
@@ -37,9 +39,9 @@ val websocketsAttribute = AttributeKey<MutableSet<WebSocketServerSession>>("webs
 val WebSocketServerSession.sockets
 	get() = application.attributes[websocketsAttribute]
 
-val playersKey = AttributeKey<MutableSet<UUID>>("players")
+val playersKey = AttributeKey<MutableList<UUID>>("players")
 
-var WebSocketServerSession.players
+var WebSocketServerSession.trackedPlayers
 	get() = call.attributes[playersKey]
 	set(value) = call.attributes.put(playersKey, value)
 
@@ -69,4 +71,11 @@ operator fun Set<Cosmetic>.component6(): Cosmetic? {
 
 operator fun Set<Cosmetic>.component7(): Cosmetic? {
 	return firstOrNull { it.type == CosmeticType.BACKPACK }
+}
+
+inline fun <reified T: OfflinePlayer> MutableList<T>.removeSystem(systemId: UUID) {
+	val old = mutableListOf(*this.toTypedArray())
+	clear()
+
+	addAll(old.filter { FastUUID.parseUUID(it.id) != systemId })
 }

@@ -15,7 +15,7 @@ import moe.hypixel.lc.database.models.user.UserRank
 import moe.hypixel.lc.server.packets.obj.PlayerCosmetic
 
 class CosmeticManager {
-	private var cosmetics = mutableSetOf<Cosmetic>()
+	private var cosmetics = mutableListOf<Cosmetic>()
 
 	suspend fun init() {
 		val client = HttpClient(CIO) {
@@ -78,7 +78,7 @@ class CosmeticManager {
 
 	fun getCosmetic(id: Int) = cosmetics.firstOrNull { it.id == id }
 
-	fun getCosmetics(): Set<Cosmetic> {
+	fun getCosmetics(): List<Cosmetic> {
 		return cosmetics
 	}
 

@@ -7,11 +7,11 @@ import moe.hypixel.lc.server.packets.utils.readVarInt
 import moe.hypixel.lc.server.packets.utils.writeVarIntList
 
 @PacketId(57)
-class EmoteGivePacket(
-	var emotes: MutableSet<Int>,
-	var equippedEmotes: MutableSet<Int>
+class GiveEmotesPacket(
+	var emotes: MutableList<Int>,
+	var equippedEmotes: MutableList<Int>
 ): Packet {
-	constructor(): this(mutableSetOf(), mutableSetOf())
+	constructor(): this(mutableListOf(), mutableListOf())
 
 	override fun write(buf: ByteBuf) {
 		buf.writeVarIntList(emotes.toList())

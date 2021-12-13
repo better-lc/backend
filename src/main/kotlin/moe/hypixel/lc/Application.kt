@@ -22,13 +22,6 @@ fun main() {
 		module {
 			di {
 				bind<Database>() with singleton { Database.create(System.getenv("DATABASE_URI"), System.getenv("DATABASE_NAME")) }
-				bind<AsyncRedis>() with singleton { AsyncRedis.create(System.getenv("REDIS_URI")) }
-
-				bind<Cache>() with singleton {
-					val redis by instance<AsyncRedis>()
-					Cache(redis)
-				}
-
 				bind<CosmeticManager>() with singleton { runBlocking { CosmeticManager.create() } }
 			}
 

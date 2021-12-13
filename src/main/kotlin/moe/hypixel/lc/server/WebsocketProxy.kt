@@ -8,15 +8,10 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.util.*
 import io.ktor.websocket.*
 import io.netty.buffer.Unpooled
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withContext
-import moe.hypixel.lc.server.packets.CosmeticChangePacket
-import moe.hypixel.lc.server.packets.GiveCosmeticsPacket
 import moe.hypixel.lc.server.packets.utils.Packet
 import moe.hypixel.lc.server.packets.utils.PacketManager
 import moe.hypixel.lc.server.packets.utils.sendPacket
-import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.ktor.closestDI
 
@@ -92,6 +87,8 @@ class WebsocketProxy(
 					}
 				}
 			}
+
+			handler.onClose(clientSocket.closeReason.await() ?: closeReason.await())
 		}
 	}
 }

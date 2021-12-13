@@ -25,8 +25,11 @@ class PacketManager(
 
 	fun getPacket(buf: ByteBuf): Packet? {
 		val id = buf.readVarInt()
-		println("Received packet with id $id")
 		val packet = getPacket(id)
+
+		if(packet == null) {
+			//println("Received packet with id $id")
+		}
 		packet?.read(buf)
 		buf.release()
 		return packet
@@ -70,15 +73,15 @@ class PacketManager(
 				CosmeticChangePacket::class,
 				DoEmoteInPacket::class,
 				DoEmoteOutPacket::class,
-				EmoteGivePacket::class,
+				GiveEmotesPacket::class,
 				FriendMessagePacket::class,
-				//TODO: Implement
-				//FriendsListPacket::class,
+				FriendsListPacket::class,
 				GiveCosmeticsPacket::class,
 				RemoveTrackedPlayersPacket::class,
 				AddTrackedPlayersPacket::class,
 				ServerDataInPacket::class,
-				EquipEmotesPacket::class
+				EquipEmotesPacket::class,
+				CrashPacket::class
 			)
 
 			return packetManager

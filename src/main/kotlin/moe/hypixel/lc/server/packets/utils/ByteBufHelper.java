@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 
+// https://github.com/PringlePot/LCWebsocket/blob/master/src/main/java/me/pringles/lcwebsocketclient/util/ByteBufWrapper.java
 public class ByteBufHelper {
 	public static int readVarInt(ByteBuf buf)
 	{

@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import moe.hypixel.lc.cosmetics.CosmeticManager
 import moe.hypixel.lc.cosmetics.CosmeticType
 import moe.hypixel.lc.database.models.User
-import moe.hypixel.lc.database.models.user.UserRank
 import moe.hypixel.lc.server.packets.utils.PacketId
 import moe.hypixel.lc.server.packets.utils.readVarInt
 import moe.hypixel.lc.server.packets.utils.writeVarInt
@@ -18,8 +17,9 @@ class GiveCosmeticsPacket(
 	var iconColour: Int,
 	var clothCloak: Boolean,
 	var lunarPlus: Boolean,
-	var whoFuckingKnows: Boolean
+	var otherClothCloak: Boolean
 ): DIPacket() {
+	var all: Boolean = false
 	@Deprecated("", level = DeprecationLevel.ERROR)
 	constructor(): this(UUID.randomUUID(), mutableMapOf(), -1, true, true, true)
 	constructor(user: User) : this(UUID.randomUUID(), mutableMapOf(), -1, true, true, true) {
@@ -27,29 +27,43 @@ class GiveCosmeticsPacket(
 	}
 
 	fun applyUser(user: User) {
+		id = user.uuid
 		iconColour = user.rank.colour
+		lunarPlus = true
 		enabledCosmetics = user.cosmetics
-		lunarPlus = user.rank.plus
-		clothCloak = user.settings["clothCloak"]?.toBooleanStrict() ?: false
+		val clothCloakSetting = user.settings["clothCloak"]?.toBooleanStrict() ?: false
+
+		clothCloak = clothCloakSetting
+		otherClothCloak = clothCloakSetting
 	}
 
 	override fun write(buf: ByteBuf) {
-		val cosmeticManager by instance<CosmeticManager>()
-
 		buf.writeLong(id.mostSignificantBits)
 		buf.writeLong(id.leastSignificantBits)
 
-		val cosmetics = cosmeticManager.getCosmetics()
-		buf.writeVarInt(cosmetics.size)
-		for(cosmetic in cosmetics) {
-			buf.writeVarInt(cosmetic.id)
-			buf.writeBoolean(enabledCosmetics.containsValue(cosmetic.id))
+		if(all) {
+			val cosmeticManager by instance<CosmeticManager>()
+
+			val cosmetics = cosmeticManager.getCosmetics()
+
+			buf.writeVarInt(cosmetics.size)
+
+			for(cosmetic in cosmetics) {
+				buf.writeVarInt(cosmetic.id)
+				buf.writeBoolean(enabledCosmetics.containsValue(cosmetic.id))
+			}
+		} else {
+			buf.writeVarInt(enabledCosmetics.size)
+			for((_, id) in enabledCosmetics) {
+				buf.writeVarInt(id)
+				buf.writeBoolean(true)
+			}
 		}
 
 		buf.writeInt(iconColour)
 		buf.writeBoolean(clothCloak)
 		buf.writeBoolean(lunarPlus)
-		buf.writeBoolean(whoFuckingKnows)
+		buf.writeBoolean(otherClothCloak)
 	}
 
 	override fun read(buf: ByteBuf) {
@@ -69,6 +83,6 @@ class GiveCosmeticsPacket(
 		// No clue what these do yet
 		clothCloak = buf.readBoolean()
 		lunarPlus = buf.readBoolean()
-		whoFuckingKnows = buf.readBoolean()
+		otherClothCloak = buf.readBoolean()
 	}
 }
